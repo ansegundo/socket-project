@@ -2,60 +2,58 @@ from tkinter import *
 import tkinter.font as tkFont
 import socket
 import threading
-from threading import Thread
 import queue
-import time
 
+s = ''
+connected = False
 
 def teste_server_socket():
-    print('teste server socket')
-    port = 60000  # Reserve a port for your service.
-    s = socket.socket()  # Create a socket object
-    host = socket.gethostname()  # Get local machine name
-    s.bind((host, port))  # Bind to the port
-    s.listen(5)  # Now wait for client connection.
+    global s, connected
+    connected = True
+    # port = 60000                  # Reserve a port for your service.
+    s = socket.socket()             # Create a socket object
+    # host = socket.gethostname()   # Get local machine name
+    s.bind(('localhost', 9999))    # Bind to the port
+    s.listen(10)                    # Now wait for client connection.
 
-    print(b'Server listening....')
+    print('Server listening....')
 
-    while True:
-        conn, addr = s.accept()  # Establish connection with client.
-        print(str(addr))
-        data = conn.recv(1024)
-        print(repr(data))
+    conn, address = s.accept()  # Establish connection with client.
+    print(address)
+    data = conn.recv(1024)
+    print(repr(data))
 
-        filename = 'mytext.txt'
-        f = open(filename, 'rb')
-        l = f.read(1024)
-        while (l):
-            conn.send(l)
-            print('Sent ', repr(l))
-            l = f.read(1024)
-        f.close()
+    print('comunicacao')
+    conn.send(b'first message')
+    print('mensagem enviada')
 
-        if print(b'Done sending'):
-            return
-        conn.send(b'Thank you for connecting')
-        conn.close()
+
+def close_socket():
+    global s, connected
+
+    if not connected:
+        s.close()
+        print('connection closed func')
 
 
 class Reader:
-    status = False
 
     def btn_on_click(self):
-        print("BTN ON")
+        print("\tbutton ON pressed")
         self.btn_on.configure(state='disabled', bg='grey')
         self.btn_off.config(state='normal', bg='red')
-        self.status = True
-        print(self.status)
         # teste_server_socket()
         self.queue = queue.Queue()
         ThreadedTask(self.queue).start()
         self.root.after(100, self.process_queue)
 
     def btn_off_click(self):
-        print("BTN OFF")
+        global connected
+        print("\tbutton OFF pressed")
         self.btn_on.config(state='normal', bg='green')
         self.btn_off.config(state='disabled', bg='grey')
+        connected = False
+        close_socket()
 
     def __init__(self, root):
         self.root = root
@@ -95,7 +93,7 @@ class Reader:
         try:
             msg = self.queue.get(0)
             # Show result of the task if needed
-            teste_server_socket().stop()
+            close_socket()
         except queue.Empty:
             self.root.after(100, self.process_queue)
 
@@ -115,7 +113,6 @@ root.columnconfigure(0, weight=0)
 # label = Label(root, text="Hello, world")
 # font = tkFont.Font(font=label['font'])
 # print(font.actual())
-
 reader = Reader(root)
 root.mainloop()
 

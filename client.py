@@ -2,33 +2,23 @@ from tkinter import *
 import tkinter.font as tkFont
 import socket
 import threading
-from threading import Thread
 import queue
-import time
 
 
 def teste_client_socket():
     s = socket.socket()  # Create a socket object
-    host = socket.gethostname()  # Get local machine name
-    port = 60000  # Reserve a port for your service.
-    s.connect((host, port))
+    # host = socket.gethostname()  # Get local machine name
+    # port = 60000  # Reserve a port for your service.
+    s.connect(('localhost', 9999))
     s.send(b"Hello server!")
 
-    with open('received_file', 'wb') as f:
-        print(b'file opened')
-        while True:
-            print(b'receiving data...')
-            data = s.recv(1024)
-            print(data)
-            if not data:
-                break
-            # write data to a file
-            f.write(data)
 
-    f.close()
-    print(b'Successfully get the file')
+    data = s.recv(1024)
+    print(data)
+
+    print('Successfully get the file')
     s.close()
-    print(b'connection closed')
+    print('connection closed')
 
 
 class Reader:
@@ -40,7 +30,10 @@ class Reader:
         self.btn_off.config(state='normal', bg='red')
         self.status = True
         print(self.status)
-        teste_client_socket()
+        # teste_client_socket()
+        self.queue = queue.Queue()
+        ThreadedTask(self.queue).start()
+        self.root.after(100, self.process_queue)
 
     def btn_off_click(self):
         print("BTN OFF")
@@ -85,9 +78,10 @@ class Reader:
         try:
             msg = self.queue.get(0)
             # Show result of the task if needed
-            self.prog_bar.stop()
+            # teste_client_socket().stop()
         except queue.Empty:
             self.root.after(100, self.process_queue)
+
 
 class ThreadedTask(threading.Thread):
     def __init__(self, queue):
@@ -95,7 +89,7 @@ class ThreadedTask(threading.Thread):
         self.queue = queue
 
     def run(self):
-        time.sleep(5)  # Simulate long running process
+        teste_client_socket()
         self.queue.put("Task finished")
 
 # Get the root window object
@@ -105,7 +99,5 @@ root.columnconfigure(0, weight=0)
 # label = Label(root, text="Hello, world")
 # font = tkFont.Font(font=label['font'])
 # print(font.actual())
-# Create application
 reader = Reader(root)
-# Run the app until exited
 root.mainloop()
