@@ -1,24 +1,37 @@
 from tkinter import *
-import tkinter.font as tkFont
+from tkinter import ttk
+from tkinter.filedialog import askopenfilename
+from tkinter.messagebox import showerror
+import tkinter.font as tkfont
 import socket
 import threading
 import queue
+import os
+
+s = ''
+connected = False
 
 
 def teste_client_socket():
+    global s, connected
+    connected = True
     s = socket.socket()  # Create a socket object
-    # host = socket.gethostname()  # Get local machine name
-    # port = 60000  # Reserve a port for your service.
     s.connect(('localhost', 9999))
-    s.send(b"Hello server!")
+    s.send(b'hello')
 
-
-    data = s.recv(1024)
-    print(data)
+    while connected:
+        data = s.recv(1024)
+        print(data)
 
     print('Successfully get the file')
-    s.close()
-    print('connection closed')
+
+
+def close_socket():
+    global s, connected
+
+    if not connected:
+        s.close()
+        print('connection closed func')
 
 
 class Reader:
@@ -36,9 +49,31 @@ class Reader:
         self.root.after(100, self.process_queue)
 
     def btn_off_click(self):
+        global connected
         print("BTN OFF")
         self.btn_on.config(state='normal', bg='green')
         self.btn_off.config(state='disabled', bg='grey')
+        connected = False
+        close_socket()
+
+    def load_file(self):
+        global s
+        fname = askopenfilename(filetypes=(("PDF Files", "*.pdf"), ("HTML files", "*.html;*.htm"), ("All files", "*.*")))
+        if fname:
+            try:
+                print(fname)
+                fname_split = fname.split('/')
+                print(fname_split)
+                self.treeview.insert('', 'end', text=fname_split[-1], values=(fname, os.path.getsize('/'.join(map(str, fname_split)))))
+            except:  # <- naked except is a bad idea
+                showerror("Open Source File", "Failed to read file\n'%s'" % fname)
+            return
+
+    def selectItem(self):
+        curItem = self.tree.focus()
+        print(self.tree.item(curItem))
+        print(self.tree.item((curItem)).get('values')[0])
+        s.send(b'item enviado')
 
     def __init__(self, root):
         self.root = root
@@ -49,7 +84,7 @@ class Reader:
         # Block resizing of Window
         root.resizable(width=False, height=False)
         # Customize the styling for the buttons and entry
-        self.customFont = tkFont.Font(family="Helvetica", size=10)
+        self.customFont = tkfont.Font(family="Helvetica", size=10)
 
         self.lbf_one = LabelFrame(root)
         self.lbf_one.grid(row=0, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
@@ -68,11 +103,30 @@ class Reader:
         self.lb_status = Label(self.lbf_one, text='Status', font=self.customFont)
         self.lb_status.grid(row=1, column=0, sticky=W)
 
-        self.lbf_two = LabelFrame(root)
+        self.lbf_two = LabelFrame(root, width=500, height=200)
         self.lbf_two.grid(row=1, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
 
-        self.text = Text(self.lbf_two)
-        self.text.grid(row=0, column=0)
+        # self.text = Text(self.lbf_two)
+        # self.text.grid(row=0, column=0)
+
+        # Set the treeview
+        self.tree = ttk.Treeview(self.lbf_two, columns=('Files', 'Path'))
+        self.tree.heading('#0', text='Files')
+        self.tree.column('#0', width=200, stretch=YES)
+        self.tree.heading('#1', text='Path')
+        self.tree.column('#1', width=300, stretch=YES)
+        self.tree.heading('#2', text='Size (bytes)')
+        self.tree.column('#2', width=100, stretch=YES)
+        self.tree.grid(row=4, columnspan=4, sticky='nsew')
+        self.treeview = self.tree
+        # Initialize the counter
+        self.i = 0
+
+        self.btn_browser = Button(self.lbf_two, text="Browse", command=self.load_file, width=10)
+        self.btn_browser.grid(row=0,  column=0, sticky=W, padx=0)
+
+        self.btn_sendfile = Button(self.lbf_two, text="Send", command=self.selectItem, width=10)
+        self.btn_sendfile.grid(row=0, column=1, sticky=W, padx=0)
 
     def process_queue(self):
         try:
@@ -92,12 +146,8 @@ class ThreadedTask(threading.Thread):
         teste_client_socket()
         self.queue.put("Task finished")
 
-# Get the root window object
 root = Tk()
 root.columnconfigure(0, weight=0)
-# Get font data
-# label = Label(root, text="Hello, world")
-# font = tkFont.Font(font=label['font'])
-# print(font.actual())
+root.config(background='blue')
 reader = Reader(root)
 root.mainloop()

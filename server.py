@@ -1,5 +1,5 @@
 from tkinter import *
-import tkinter.font as tkFont
+import tkinter.font as tkfont
 import socket
 import threading
 import queue
@@ -7,25 +7,28 @@ import queue
 s = ''
 connected = False
 
+
 def teste_server_socket():
     global s, connected
     connected = True
-    # port = 60000                  # Reserve a port for your service.
     s = socket.socket()             # Create a socket object
-    # host = socket.gethostname()   # Get local machine name
-    s.bind(('localhost', 9999))    # Bind to the port
+    s.bind(('localhost', 9999))     # Bind to the port
     s.listen(10)                    # Now wait for client connection.
-
     print('Server listening....')
 
-    conn, address = s.accept()  # Establish connection with client.
-    print(address)
-    data = conn.recv(1024)
-    print(repr(data))
+    try:
+        conn, address = s.accept()  # Establish connection with client.
+    except:
+        print('Cliente nao conectado')
 
-    print('comunicacao')
-    conn.send(b'first message')
-    print('mensagem enviada')
+    print(address)
+    while connected:
+        try:
+            data = conn.recv(1024)
+            print(repr(data))
+        except:
+            print('Disconected')
+            connected = False
 
 
 def close_socket():
@@ -43,7 +46,6 @@ class Reader:
         self.btn_on.configure(state='disabled', bg='grey')
         self.btn_off.config(state='normal', bg='red')
         # teste_server_socket()
-        self.queue = queue.Queue()
         ThreadedTask(self.queue).start()
         self.root.after(100, self.process_queue)
 
@@ -57,6 +59,7 @@ class Reader:
 
     def __init__(self, root):
         self.root = root
+        self.queue = queue.Queue()
         # Define title for the app
         root.title("DataReader - Server")
         # Defines the width and height of the window
@@ -64,7 +67,7 @@ class Reader:
         # Block resizing of Window
         root.resizable(width=False, height=False)
         # Customize the styling for the buttons and entry
-        self.customFont = tkFont.Font(family="Helvetica", size=10)
+        self.customFont = tkfont.Font(family="Helvetica", size=10)
 
         self.lbf_one = LabelFrame(root)
         self.lbf_one.grid(row=0, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
@@ -104,15 +107,14 @@ class ThreadedTask(threading.Thread):
         self.queue = queue
 
     def run(self):
-        teste_server_socket()  # Simulate long running process
-        self.queue.put("Task finished")
+        try:
+            teste_server_socket()  # Simulate long running process
+            self.queue.put("Task finished")
+        except:
+            print('Erro multithreading')
 
 root = Tk()
 root.columnconfigure(0, weight=0)
-# Get font data
-# label = Label(root, text="Hello, world")
-# font = tkFont.Font(font=label['font'])
-# print(font.actual())
 reader = Reader(root)
 root.mainloop()
 
