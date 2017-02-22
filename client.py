@@ -5,85 +5,79 @@ from tkinter.messagebox import showerror
 import tkinter.font as tkfont
 import socket
 import threading
-import queue
 import os
-
-s = ''
-connected = False
-
-
-def teste_client_socket():
-    global s, connected
-    connected = True
-    s = socket.socket()  # Create a socket object
-    s.connect(('localhost', 9999))
-    s.send(b'hello')
-
-    while connected:
-        data = s.recv(1024)
-        print(data)
-
-    print('Successfully get the file')
-
-
-def close_socket():
-    global s, connected
-
-    if not connected:
-        s.close()
-        print('connection closed func')
 
 
 class Reader:
-    status = False
+
+    def start_client_socket(self):
+        self.connected = True
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create a socket object
+        self.s.connect(('localhost', 9999))
+
+        # while self.connected:
+        #     data = self.s.recv(1024)
+        #     print(data)
+        #
+        # print('Successfully get the file')
+
+    def close_client_socket(self):
+        if not self.connected:
+            self.s.close()
+            print('client connection closed func')
 
     def btn_on_click(self):
         print("BTN ON")
         self.btn_on.configure(state='disabled', bg='grey')
         self.btn_off.config(state='normal', bg='red')
-        self.status = True
-        print(self.status)
-        # teste_client_socket()
-        self.queue = queue.Queue()
-        ThreadedTask(self.queue).start()
-        self.root.after(100, self.process_queue)
+        t = threading.Thread(target=self.start_client_socket)
+        t.start()
 
     def btn_off_click(self):
-        global connected
         print("BTN OFF")
         self.btn_on.config(state='normal', bg='green')
         self.btn_off.config(state='disabled', bg='grey')
-        connected = False
-        close_socket()
+        self.connected = False
+        self.close_client_socket()
 
     def load_file(self):
-        global s
-        fname = askopenfilename(filetypes=(("PDF Files", "*.pdf"), ("HTML files", "*.html;*.htm"), ("All files", "*.*")))
+        fname = askopenfilename(filetypes=(("PDF Files", "*.pdf"), ("TEXT files", "*.txt"), ("All files", "*.*")))
         if fname:
             try:
                 print(fname)
                 fname_split = fname.split('/')
                 print(fname_split)
-                self.treeview.insert('', 'end', text=fname_split[-1], values=(fname, os.path.getsize('/'.join(map(str, fname_split)))))
+                self.treeview.insert('', 'end', text=fname_split[-1], values=(fname, os.path.getsize(fname)))
             except:  # <- naked except is a bad idea
                 showerror("Open Source File", "Failed to read file\n'%s'" % fname)
             return
 
-    def selectItem(self):
-        curItem = self.tree.focus()
-        print(self.tree.item(curItem))
-        print(self.tree.item((curItem)).get('values')[0])
-        s.send(b'item enviado')
+    def select_item(self):
+        cur_item = self.tree.focus()
+        print(self.tree.item(cur_item))
+        print(self.tree.item(cur_item).get('values')[0])
+        # s.send(b'item enviado')
+        file = open(self.tree.item(cur_item).get('values')[0], 'rb')
+        self.send_file(file)
+
+    def send_file(self, file):
+        l = file.read(1024)
+        while l:
+            print('Sending...')
+            self.s.send(l)
+            l = file.read(1024)
+        file.close()
+        print('Done Sending')
+        return
 
     def __init__(self, root):
         self.root = root
-        # Define title for the app
+        self.s = ''
+        self.connected = False
+
         root.title("DataReader")
-        # Defines the width and height of the window
         root.geometry("800x500")
-        # Block resizing of Window
         root.resizable(width=False, height=False)
-        # Customize the styling for the buttons and entry
         self.customFont = tkfont.Font(family="Helvetica", size=10)
 
         self.lbf_one = LabelFrame(root)
@@ -125,26 +119,8 @@ class Reader:
         self.btn_browser = Button(self.lbf_two, text="Browse", command=self.load_file, width=10)
         self.btn_browser.grid(row=0,  column=0, sticky=W, padx=0)
 
-        self.btn_sendfile = Button(self.lbf_two, text="Send", command=self.selectItem, width=10)
+        self.btn_sendfile = Button(self.lbf_two, text="Send", command=self.select_item, width=10)
         self.btn_sendfile.grid(row=0, column=1, sticky=W, padx=0)
-
-    def process_queue(self):
-        try:
-            msg = self.queue.get(0)
-            # Show result of the task if needed
-            # teste_client_socket().stop()
-        except queue.Empty:
-            self.root.after(100, self.process_queue)
-
-
-class ThreadedTask(threading.Thread):
-    def __init__(self, queue):
-        threading.Thread.__init__(self)
-        self.queue = queue
-
-    def run(self):
-        teste_client_socket()
-        self.queue.put("Task finished")
 
 root = Tk()
 root.columnconfigure(0, weight=0)

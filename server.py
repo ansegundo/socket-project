@@ -2,71 +2,99 @@ from tkinter import *
 import tkinter.font as tkfont
 import socket
 import threading
-import queue
-
-s = ''
-connected = False
-
-
-def teste_server_socket():
-    global s, connected
-    connected = True
-    s = socket.socket()             # Create a socket object
-    s.bind(('localhost', 9999))     # Bind to the port
-    s.listen(10)                    # Now wait for client connection.
-    print('Server listening....')
-
-    try:
-        conn, address = s.accept()  # Establish connection with client.
-    except:
-        print('Cliente nao conectado')
-
-    print(address)
-    while connected:
-        try:
-            data = conn.recv(1024)
-            print(repr(data))
-        except:
-            print('Disconected')
-            connected = False
-
-
-def close_socket():
-    global s, connected
-
-    if not connected:
-        s.close()
-        print('connection closed func')
 
 
 class Reader:
+
+    def start_server_socket(self):
+        self.connected = True
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.bind(('localhost', 9999))  # Bind to the port
+        self.s.listen(10)  # Now wait for client connection.
+        print('server listening....')
+
+        try:
+            conn, address = self.s.accept()  # Establish connection with client.
+            print(address)
+        except:
+            print('cliente nao conectado')
+
+        while self.connected:
+            try:
+                data = conn.recv(1024)
+                if bytes.decode(data) == '':
+                    self.connected = False
+                    self.close_server_socket()
+                    self.start_server_socket()
+            except:
+                print('disconnected')
+                self.connected = False
+
+        self.get_files(conn, data)
+
+    def close_server_socket(self):
+        if not self.connected:
+            self.s.close()
+            print('connection closed function')
+
+    def get_files(self, conn, data):
+        with open('received_file.txt', 'wb') as file:
+            print('file opened')
+            while data:
+                # write data to a file
+                file.write(data)
+                print('receiving data...')
+                data = conn.recv(1024)
+                # print('data=%s', (data))
+                if not data:
+                    break
+
+        file.close()
+        print('Successfully get the file')
+        self.s.close()
+        print('connection closed')
 
     def btn_on_click(self):
         print("\tbutton ON pressed")
         self.btn_on.configure(state='disabled', bg='grey')
         self.btn_off.config(state='normal', bg='red')
-        # teste_server_socket()
-        ThreadedTask(self.queue).start()
-        self.root.after(100, self.process_queue)
+        t = threading.Thread(target=self.start_server_socket)
+        t.start()
 
     def btn_off_click(self):
-        global connected
         print("\tbutton OFF pressed")
         self.btn_on.config(state='normal', bg='green')
         self.btn_off.config(state='disabled', bg='grey')
-        connected = False
-        close_socket()
+        self.connected = False
+        self.close_server_socket()
+
+    def btn_refresh_files(self):
+        print('refresh')
+        with open('received_file.txt', 'wb') as f:
+            print('file opened')
+            while True:
+                print('receiving data...')
+                data = self.s.recv(1024)
+                # print('data=%s', (data))
+                if not data:
+                    break
+                # write data to a file
+                f.write(data)
+
+        f.close()
+        print('Successfully get the file')
+        self.s.close()
+        print('connection closed')
 
     def __init__(self, root):
         self.root = root
-        self.queue = queue.Queue()
-        # Define title for the app
+        self.s = ''
+        self.connected = False
+
         root.title("DataReader - Server")
-        # Defines the width and height of the window
         root.geometry("800x500")
-        # Block resizing of Window
         root.resizable(width=False, height=False)
-        # Customize the styling for the buttons and entry
+
         self.customFont = tkfont.Font(family="Helvetica", size=10)
 
         self.lbf_one = LabelFrame(root)
@@ -92,26 +120,11 @@ class Reader:
         self.text = Text(self.lbf_two)
         self.text.grid(row=0, column=0)
 
-    def process_queue(self):
-        try:
-            msg = self.queue.get(0)
-            # Show result of the task if needed
-            close_socket()
-        except queue.Empty:
-            self.root.after(100, self.process_queue)
+        self.btn_refresh = Button(self.lbf_two, text="Refresh", fg='white', bg='grey',
+                              command=self.btn_refresh_files, font=self.customFont)
+        self.btn_refresh.grid(row=1, column=0)
 
 
-class ThreadedTask(threading.Thread):
-    def __init__(self, queue):
-        threading.Thread.__init__(self)
-        self.queue = queue
-
-    def run(self):
-        try:
-            teste_server_socket()  # Simulate long running process
-            self.queue.put("Task finished")
-        except:
-            print('Erro multithreading')
 
 root = Tk()
 root.columnconfigure(0, weight=0)
