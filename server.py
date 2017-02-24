@@ -1,9 +1,15 @@
     # pylint: disable-all
 
 from tkinter import *
+from tkinter import ttk
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askdirectory
+from tkinter.messagebox import showerror
 import tkinter.font as tkfont
 import socket
 import threading
+import os
+import glob
 
 
 class Reader:
@@ -55,7 +61,8 @@ class Reader:
         with open ('new_file.csv', 'wb') as csvfile:
             print('csv opened')
             while True:
-                print('receiving data...')
+                # print('receiving data...')
+                self.text.insert(END, 'receiving data\n')
                 data = conn.recv(1024)
                 if not data:
                     break
@@ -64,7 +71,13 @@ class Reader:
             print('Successfully get the file')
             self.s.close()
             print('connection closed')
-            
+            self.update_files()
+    
+    def update_files(self):
+        print('got here')
+        for filename in glob.iglob(r'C:\Users\ans\PycharmProjects\DataReader/**/*.csv', recursive=True):
+            print(filename)
+        return    
 
     def get_files(self, conn):
         with open('received_file.txt', 'wb') as file:
@@ -79,10 +92,11 @@ class Reader:
                 # write data to a file
                 file.write(data)
         file.close()
+        self.update_files()
         print('Successfully get the file')
         self.s.close()
         print('connection closed')
-
+       
     def btn_on_click(self):
         print("\tbutton ON pressed")
         self.btn_on.configure(state='disabled', bg='grey')
@@ -97,28 +111,18 @@ class Reader:
         self.connected = False
         self.close_server_socket()
 
-    def btn_refresh_files(self):
-        print('refresh')
-        with open('received_file_refresh.txt', 'wb') as f:
-            print('file opened')
-            while True:
-                print('receiving data...')
-                data = self.s.recv(1024)
-                # print('data=%s', (data))
-                if not data:
-                    break
-                # write data to a file
-                f.write(data)
-
-        f.close()
-        print('Successfully get the file')
-        self.s.close()
-        print('connection closed')
+    def preview_files(self):
+        print('hello')
+    
+    def select_directory(self):
+        path = askdirectory()
+        print(path)
 
     def __init__(self, root):
         self.root = root
         self.s = ''
         self.connected = False
+        self.path = ''
 
         root.title("DataReader - Server")
         # root.geometry("800x500")
@@ -146,17 +150,40 @@ class Reader:
         self.lb_status = Label(self.lbf_one, text='Estado: ', font=self.customFont)
         self.lb_status.grid(row=1, column=0, sticky=W)
 
-        self.lbf_two = LabelFrame(root)
-        self.lbf_two.grid(row=1, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
+        self.lbf_two = LabelFrame(root, text="Arquivos Recebidos", width=500, height=150)
+        self.lbf_two.grid(row=2, columnspan=4, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
+        self.lbf_two.grid_columnconfigure(2, weight=1)
+        self.lbf_two.grid_rowconfigure(0, weight=1)
+        self.lbf_two.grid_propagate(False)
 
-        self.text = Text(self.lbf_two)
+        self.btn_refresh = Button(self.lbf_two, text="Preview", fg='white', bg='grey', command=self.preview_files, font=self.customFont)
+        self.btn_refresh.grid(row=1, column=0)
+        self.btn_directory = Button(self.lbf_two, text="Diretório", fg='white', bg='grey', command=self.select_directory, font=self.customFont)
+        self.btn_directory.grid(row=1, column=1)
+
+        # Set the treeview
+        self.tree = ttk.Treeview(self.lbf_two, columns=('Files', 'Path'))
+        self.tree.heading('#0', text='Files')
+        self.tree.column('#0', width=100, stretch=YES)
+        self.tree.heading('#1', text='Path')
+        self.tree.column('#1', width=200, stretch=YES)
+        self.tree.heading('#2', text='Size (bytes)')
+        self.tree.column('#2', width=50, stretch=YES)
+        self.tree.grid(row=0, columnspan=4, sticky='WE')
+        self.treeview = self.tree
+        # Initialize the counter
+        self.i = 0
+
+        self.lbf_three = LabelFrame(root, text="Preview Tab", width=500, height=200)
+        self.lbf_three.grid(row=1, columnspan=4, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
+        self.lbf_three.grid_columnconfigure(0, weight=1)
+        self.lbf_three.grid_rowconfigure(0, weight=1)
+        self.lbf_three.grid_propagate(False)
+
+        self.text = Text(self.lbf_three)
         self.text.grid(row=0, column=0)
 
-        self.btn_refresh = Button(self.lbf_two, text="Refresh", fg='white', bg='grey',
-                              command=self.btn_refresh_files, font=self.customFont)
-        self.btn_refresh.grid(row=1, column=0)
-
-
+        
 
 root = Tk()
 root.columnconfigure(0, weight=0)
