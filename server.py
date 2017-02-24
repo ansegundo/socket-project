@@ -60,7 +60,10 @@ class Reader:
             self.get_csv(conn)
 
     def get_csv(self, conn):
-        with open (self.path + '/' +'new_file.csv', 'wb') as csvfile:
+        nome = conn.recv(1024)
+        print(nome.decode("utf-8"))
+        nome = nome.decode("utf-8")
+        with open (self.path + '/' +nome, 'wb') as csvfile:
             print('csv opened')
             while True:
                 # print('receiving data...')
@@ -86,6 +89,8 @@ class Reader:
         return    
 
     def get_files(self, conn):
+        nome = conn.recv(1024)
+        print(nome)
         with open('received_file.txt', 'wb') as file:
             print('txt opened')
             while True:

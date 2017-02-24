@@ -8,6 +8,7 @@ import tkinter.font as tkfont
 import socket
 import threading
 import os
+import time
 
 
 class Reader:
@@ -64,9 +65,12 @@ class Reader:
         cur_item = self.tree.focus()
         print(self.tree.item(cur_item))
         print(self.tree.item(cur_item).get('values')[0])
+        name = self.tree.item(cur_item).get('text')
+        # self.s.send(name.encode("utf-8"))
+        # time.sleep(0.0001)
         # s.send(b'item enviado')
         file = open(self.tree.item(cur_item).get('values')[0], 'rb')
-        self.send_csv(file)
+        self.send_csv(file, name)
 
     def send_file(self, file):
         self.s.send(b'2')
@@ -80,8 +84,9 @@ class Reader:
         self.s.close()
         return
 
-    def send_csv(self, file):
+    def send_csv(self, file, name):
         self.s.send(b'3')
+        self.s.send(name.encode("utf-8"))
         l = file.read(1024)
         while l:
             print('Sending...')
