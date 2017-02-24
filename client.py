@@ -13,11 +13,13 @@ import os
 class Reader:
 
     def start_client_socket(self):
-        self.connected = True
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create a socket object
+        self.connected = True                                       # Connection verifier  
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Estabilish a TCP/IP socket
         try:
-            self.s.connect(('localhost', 9999))
+            self.s.connect(('localhost', 9999))                     # Connect to host/port
             self.s.send(b'1')
+            self.lb_status = Label(self.lbf_one, text='Conectado com o Servidor', font=self.customFont)
+            self.lb_status.grid(row=1, column=1, columnspan=2, sticky=W)
         except Exception as e:
             print(e)
         

@@ -10,19 +10,20 @@ import socket
 import threading
 import os
 import glob
+import re
 
 
 class Reader:
 
     def start_server_socket(self):
-        self.connected = True
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind(('localhost', 9999))  # Bind to the port
-        self.s.listen(10)  # Now wait for client connection.
+        self.connected = True                                       # Connection verifier          
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Estabilish a TCP/IP socket
+        self.s.bind(('172.17.1.165', 9999))                            # Bind to the port
+        self.s.listen(10)                                           # Now wait for client connection.
         print('server listening....')
 
         try:
-            conn, address = self.s.accept()  # Establish connection with client.
+            conn, address = self.s.accept()                         # Establish connection with client.
             print(address)
             print('cliente se conectou')
         except:
@@ -58,7 +59,7 @@ class Reader:
             self.get_csv(conn)
 
     def get_csv(self, conn):
-        with open ('new_file.csv', 'wb') as csvfile:
+        with open (self.path + '/' +'new_file.csv', 'wb') as csvfile:
             print('csv opened')
             while True:
                 # print('receiving data...')
@@ -75,8 +76,12 @@ class Reader:
     
     def update_files(self):
         print('got here')
-        for filename in glob.iglob(r'C:\Users\ans\PycharmProjects\DataReader/**/*.csv', recursive=True):
+        for filename in glob.iglob(self.path+'/**/*.csv', recursive=True):
             print(filename)
+            fname_split = filename.re.split('/')
+            print(fname_split)
+            self.treeview.insert('', 'end', text=fname_split[-1], values=(filename, os.path.getsize
+            (filename)))
         return    
 
     def get_files(self, conn):
@@ -115,16 +120,16 @@ class Reader:
         print('hello')
     
     def select_directory(self):
-        path = askdirectory()
-        print(path)
+        self.path = askdirectory()
+        print(self.path)
 
     def __init__(self, root):
         self.root = root
         self.s = ''
         self.connected = False
-        self.path = ''
+        self.path = 'C:/'
 
-        root.title("DataReader - Server")
+        root.title("Projeto de Redes I")
         # root.geometry("800x500")
         root.resizable(width=False, height=False)
 
