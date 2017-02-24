@@ -53,7 +53,7 @@ class Reader:
 
     def get_csv(self, conn):
         with open ('new_file.csv', 'wb') as csvfile:
-            print('file opened')
+            print('csv opened')
             while True:
                 print('receiving data...')
                 data = conn.recv(1024)
@@ -68,7 +68,7 @@ class Reader:
 
     def get_files(self, conn):
         with open('received_file.txt', 'wb') as file:
-            print('file opened')
+            print('txt opened')
             while True:
 
                 print('receiving data...')

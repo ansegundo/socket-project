@@ -18,7 +18,7 @@ class Reader:
         try:
             self.s.connect(('localhost', 9999))
             self.s.send(b'1')
-        except ConnectionRefusedError as e:
+        except Exception as e:
             print(e)
         
         # while self.connected:
@@ -64,10 +64,22 @@ class Reader:
         print(self.tree.item(cur_item).get('values')[0])
         # s.send(b'item enviado')
         file = open(self.tree.item(cur_item).get('values')[0], 'rb')
-        self.send_file(file)
+        self.send_csv(file)
 
     def send_file(self, file):
         self.s.send(b'2')
+        l = file.read(1024)
+        while l:
+            print('Sending...')
+            self.s.send(l)
+            l = file.read(1024)
+        file.close()
+        print('Done Sending')
+        self.s.close()
+        return
+
+    def send_csv(self, file):
+        self.s.send(b'3')
         l = file.read(1024)
         while l:
             print('Sending...')
