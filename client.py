@@ -1,3 +1,5 @@
+# pylint: disable-all
+
 from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
@@ -13,8 +15,12 @@ class Reader:
     def start_client_socket(self):
         self.connected = True
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create a socket object
-        self.s.connect(('localhost', 9999))
-
+        try:
+            self.s.connect(('localhost', 9999))
+            self.s.send(b'1')
+        except ConnectionRefusedError as e:
+            print(e)
+        
         # while self.connected:
         #     data = self.s.recv(1024)
         #     print(data)
@@ -41,7 +47,7 @@ class Reader:
         self.close_client_socket()
 
     def load_file(self):
-        fname = askopenfilename(filetypes=(("PDF Files", "*.pdf"), ("TEXT files", "*.txt"), ("All files", "*.*")))
+        fname = askopenfilename(filetypes=(("CSV Files", "*.csv"), ("PDF Files", "*.pdf"), ("TEXT files", "*.txt"), ("All files", "*.*")))
         if fname:
             try:
                 print(fname)
@@ -61,6 +67,7 @@ class Reader:
         self.send_file(file)
 
     def send_file(self, file):
+        self.s.send(b'2')
         l = file.read(1024)
         while l:
             print('Sending...')
@@ -68,6 +75,7 @@ class Reader:
             l = file.read(1024)
         file.close()
         print('Done Sending')
+        self.s.close()
         return
 
     def __init__(self, root):
@@ -75,15 +83,15 @@ class Reader:
         self.s = ''
         self.connected = False
 
-        root.title("DataReader")
-        root.geometry("800x500")
+        root.title("Projeto de Redes I")
+        #root.geometry("800x500")
         root.resizable(width=False, height=False)
         self.customFont = tkfont.Font(family="Helvetica", size=10)
 
         self.lbf_one = LabelFrame(root)
         self.lbf_one.grid(row=0, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
 
-        self.lb_app = Label(self.lbf_one, text='DataReader - Ans', font=self.customFont)
+        self.lb_app = Label(self.lbf_one, text='Client: ', font=self.customFont)
         self.lb_app.grid(row=0, column=0, sticky=W)
 
         self.btn_on = Button(self.lbf_one, text="ON", fg='white', bg='green', state='normal',
@@ -124,6 +132,6 @@ class Reader:
 
 root = Tk()
 root.columnconfigure(0, weight=0)
-root.config(background='blue')
+root.config(background='#007BA7')
 reader = Reader(root)
 root.mainloop()

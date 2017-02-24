@@ -1,3 +1,5 @@
+    # pylint: disable-all
+
 from tkinter import *
 import tkinter.font as tkfont
 import socket
@@ -16,39 +18,66 @@ class Reader:
         try:
             conn, address = self.s.accept()  # Establish connection with client.
             print(address)
+            print('cliente se conectou')
         except:
-            print('cliente nao conectado')
+            print('nao foi possível se comunicar com o cliente')
 
-        while self.connected:
-            try:
-                data = conn.recv(1024)
-                if bytes.decode(data) == '':
-                    self.connected = False
-                    self.close_server_socket()
-                    self.start_server_socket()
-            except:
-                print('disconnected')
-                self.connected = False
-
-        self.get_files(conn, data)
+        try:
+            data = conn.recv(1024)
+            print(bytes.decode(data))
+            if bytes.decode(data) == '1':
+                self.lb_status = Label(self.lbf_one, text='Cliente Conectado', font=self.customFont)
+                self.lb_status.grid(row=0, column=6, sticky=E)
+                print('command handler')
+                self.command_handler(conn)
+        except:
+            print('disconnected')
+            self.connected = False
 
     def close_server_socket(self):
         if not self.connected:
             self.s.close()
             print('connection closed function')
 
-    def get_files(self, conn, data):
+    def command_handler(self, conn):
+        try:
+            data = conn.recv(1024)
+            data = bytes.decode(data)
+            print(data)
+        except: 
+            print('no data to read')
+        if data == '2':
+            self.get_files(conn)
+        if data == '3':
+            self.get_csv(conn)
+
+    def get_csv(self, conn):
+        with open ('new_file.csv', 'wb') as csvfile:
+            print('file opened')
+            while True:
+                print('receiving data...')
+                data = conn.recv(1024)
+                if not data:
+                    break
+                csvfile.write(data)
+            csvfile.close()
+            print('Successfully get the file')
+            self.s.close()
+            print('connection closed')
+            
+
+    def get_files(self, conn):
         with open('received_file.txt', 'wb') as file:
             print('file opened')
-            while data:
-                # write data to a file
-                file.write(data)
+            while True:
+
                 print('receiving data...')
                 data = conn.recv(1024)
                 # print('data=%s', (data))
                 if not data:
                     break
-
+                # write data to a file
+                file.write(data)
         file.close()
         print('Successfully get the file')
         self.s.close()
@@ -70,7 +99,7 @@ class Reader:
 
     def btn_refresh_files(self):
         print('refresh')
-        with open('received_file.txt', 'wb') as f:
+        with open('received_file_refresh.txt', 'wb') as f:
             print('file opened')
             while True:
                 print('receiving data...')
@@ -92,10 +121,11 @@ class Reader:
         self.connected = False
 
         root.title("DataReader - Server")
-        root.geometry("800x500")
+        # root.geometry("800x500")
         root.resizable(width=False, height=False)
 
         self.customFont = tkfont.Font(family="Helvetica", size=10)
+
 
         self.lbf_one = LabelFrame(root)
         self.lbf_one.grid(row=0, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
@@ -111,8 +141,8 @@ class Reader:
                               command=self.btn_off_click, font=self.customFont)
         self.btn_off.grid(row=0, column=2, sticky=W, padx=0)
 
-        self.lb_status = Label(self.lbf_one, text='Status', font=self.customFont)
-        self.lb_status.grid(row=1, column=0, sticky=W)
+        self.lb_status = Label(self.lbf_one, text='Estado: ', font=self.customFont)
+        self.lb_status.grid(row=0, column=5, sticky=E)
 
         self.lbf_two = LabelFrame(root)
         self.lbf_two.grid(row=1, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
@@ -128,6 +158,7 @@ class Reader:
 
 root = Tk()
 root.columnconfigure(0, weight=0)
+root.config(background='#007BA7')
 reader = Reader(root)
 root.mainloop()
 
