@@ -5,6 +5,7 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter.filedialog import askdirectory
 from tkinter.messagebox import showerror
+from tkinter.messagebox import showinfo
 import tkinter.font as tkfont
 import socket
 import threading
@@ -18,7 +19,7 @@ class Reader:
     def start_server_socket(self):
         self.connected = True                                       # Connection verifier          
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Estabilish a TCP/IP socket
-        self.s.bind(('172.17.1.165', 9999))                            # Bind to the port
+        self.s.bind(('localhost', 9999))                            # Bind to the port
         self.s.listen(10)                                           # Now wait for client connection.
         print('server listening....')
 
@@ -78,9 +79,9 @@ class Reader:
         print('got here')
         for filename in glob.iglob(self.path+'/**/*.csv', recursive=True):
             print(filename)
-            fname_split = filename.re.split('/')
+            fname_split = filename.split('/')
             print(fname_split)
-            self.treeview.insert('', 'end', text=fname_split[-1], values=(filename, os.path.getsize
+            self.treeview.insert('', 'end', text=fname_split[-1].split('\\')[-1], values=(filename, os.path.getsize
             (filename)))
         return    
 
@@ -117,6 +118,7 @@ class Reader:
         self.close_server_socket()
 
     def preview_files(self):
+        self.text.delete('1.0', END)
         print('hello')
     
     def select_directory(self):
@@ -188,6 +190,7 @@ class Reader:
         self.text = Text(self.lbf_three)
         self.text.grid(row=0, column=0)
 
+        showinfo('AVISO','O endereço de armazenamento padrão é C:\ \nPara mudar, clique em Diretório')
         
 
 root = Tk()

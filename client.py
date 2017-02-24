@@ -56,7 +56,7 @@ class Reader:
                 fname_split = fname.split('/')
                 print(fname_split)
                 self.treeview.insert('', 'end', text=fname_split[-1], values=(fname, os.path.getsize(fname)))
-            except:  # <- naked except is a bad idea
+            except:  
                 showerror("Open Source File", "Failed to read file\n'%s'" % fname)
             return
 
