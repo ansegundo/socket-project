@@ -27,7 +27,7 @@ class Reader:
             print(bytes.decode(data))
             if bytes.decode(data) == '1':
                 self.lb_status = Label(self.lbf_one, text='Cliente Conectado', font=self.customFont)
-                self.lb_status.grid(row=0, column=6, sticky=E)
+                self.lb_status.grid(row=1, column=1, columnspan=2, sticky=W)
                 print('command handler')
                 self.command_handler(conn)
         except:
@@ -129,20 +129,22 @@ class Reader:
 
         self.lbf_one = LabelFrame(root)
         self.lbf_one.grid(row=0, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
+        self.lbf_one.grid_columnconfigure(2, weight=1)
+        self.lbf_one.grid_rowconfigure(1, weight=1)
 
         self.lb_app = Label(self.lbf_one, text='Servidor: ', font=self.customFont)
         self.lb_app.grid(row=0, column=0, sticky=W)
 
-        self.btn_on = Button(self.lbf_one, text="ON", fg='white', bg='green', state='normal',
+        self.btn_on = Button(self.lbf_one, text="ON", width=4, fg='white', bg='green', state='normal',
                              command=self.btn_on_click, font=self.customFont)
         self.btn_on.grid(row=0,  column=1, sticky=W, padx=0)
 
-        self.btn_off = Button(self.lbf_one, text="OFF", fg='white', bg='grey', state='disabled',
+        self.btn_off = Button(self.lbf_one, text="OFF", width=4, fg='white', bg='grey', state='disabled',
                               command=self.btn_off_click, font=self.customFont)
         self.btn_off.grid(row=0, column=2, sticky=W, padx=0)
 
         self.lb_status = Label(self.lbf_one, text='Estado: ', font=self.customFont)
-        self.lb_status.grid(row=0, column=5, sticky=E)
+        self.lb_status.grid(row=1, column=0, sticky=W)
 
         self.lbf_two = LabelFrame(root)
         self.lbf_two.grid(row=1, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)

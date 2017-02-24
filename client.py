@@ -90,15 +90,18 @@ class Reader:
 
         self.lbf_one = LabelFrame(root)
         self.lbf_one.grid(row=0, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
+        self.lbf_one.grid_columnconfigure(2, weight=1)
+        self.lbf_one.grid_rowconfigure(1, weight=1)
+
 
         self.lb_app = Label(self.lbf_one, text='Client: ', font=self.customFont)
         self.lb_app.grid(row=0, column=0, sticky=W)
 
-        self.btn_on = Button(self.lbf_one, text="ON", fg='white', bg='green', state='normal',
+        self.btn_on = Button(self.lbf_one, text="ON", width=4, fg='white', bg='green', state='normal',
                              command=self.btn_on_click, font=self.customFont)
         self.btn_on.grid(row=0,  column=1, sticky=W, padx=0)
 
-        self.btn_off = Button(self.lbf_one, text="OFF", fg='white', bg='grey', state='disabled',
+        self.btn_off = Button(self.lbf_one, text="OFF", width=4, fg='white', bg='grey', state='disabled',
                               command=self.btn_off_click, font=self.customFont)
         self.btn_off.grid(row=0, column=2, sticky=W, padx=0)
 
@@ -107,6 +110,9 @@ class Reader:
 
         self.lbf_two = LabelFrame(root, width=500, height=200)
         self.lbf_two.grid(row=1, columnspan=7, sticky='WE', padx=5, pady=5, ipadx=5, ipady=5)
+        self.lbf_two.grid_columnconfigure(2, weight=1)
+        self.lbf_two.grid_rowconfigure(1, weight=1)
+
 
         # self.text = Text(self.lbf_two)
         # self.text.grid(row=0, column=0)
@@ -119,16 +125,16 @@ class Reader:
         self.tree.column('#1', width=300, stretch=YES)
         self.tree.heading('#2', text='Size (bytes)')
         self.tree.column('#2', width=100, stretch=YES)
-        self.tree.grid(row=4, columnspan=4, sticky='nsew')
+        self.tree.grid(row=0, columnspan=4, sticky='nsew')
         self.treeview = self.tree
         # Initialize the counter
         self.i = 0
 
         self.btn_browser = Button(self.lbf_two, text="Browse", command=self.load_file, width=10)
-        self.btn_browser.grid(row=0,  column=0, sticky=W, padx=0)
+        self.btn_browser.grid(row=1,  column=0, sticky=W, padx=0)
 
         self.btn_sendfile = Button(self.lbf_two, text="Send", command=self.select_item, width=10)
-        self.btn_sendfile.grid(row=0, column=1, sticky=W, padx=0)
+        self.btn_sendfile.grid(row=1, column=1, sticky=W, padx=0)
 
 root = Tk()
 root.columnconfigure(0, weight=0)
